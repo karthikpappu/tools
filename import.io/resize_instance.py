@@ -11,6 +11,13 @@ import boto3
 import datetime, time
 
 
+def instanceName(instance):
+    if instance.tags:
+        for tag in instance.tags:
+            if tag['Key'] == 'Name':
+                return tag['Value']
+    return ''
+
 def stop_instance(instance, dryrun=False):
     print("\nstopping instance...")
     if dryrun:
@@ -21,7 +28,7 @@ def stop_instance(instance, dryrun=False):
 def create_image(inst, dryrun=False):
     print(inst.instance_id, end='', flush=True)
     timestamp = datetime.datetime.now().isoformat(timespec='minutes').replace(':', '')
-    imgname = f"Backup {timestamp} {inst.instance_id}"
+    imgname = f"Backup {timestamp} {inst.instance_id} {instanceName(inst)}"
     print(f" is {inst.state['Name']}, creating image '{imgname}'")
     if dryrun:
         print ("Dryrun: ami-dryrun")
@@ -51,7 +58,8 @@ def create_instance(ec2, instance, imageId, new_type, count, dryrun=False):
     if dryrun:
         print(f"New Instances:", ['i-deadbeef']*count)
         return ['i-deadbeef']*count
-    instances = ec2.create_instances(
+    if new_type.startswith(('t', 'T')):
+      instances = ec2.create_instances(
         ImageId=imageId,
         InstanceType=new_type,
         KeyName=instance.key_name,
@@ -60,6 +68,27 @@ def create_instance(ec2, instance, imageId, new_type, count, dryrun=False):
         CreditSpecification={
             'CpuCredits': 'unlimited'
         },
+        TagSpecifications=[
+            {
+                'ResourceType': 'instance',
+                'Tags': instance.tags
+            }
+        ],
+        NetworkInterfaces=[
+            {
+                'DeviceIndex': 0,
+                'Groups': sg_ids,
+                'SubnetId': instance.subnet_id
+            }
+        ]
+    )
+    else:
+      instances = ec2.create_instances(
+        ImageId=imageId,
+        InstanceType=new_type,
+        KeyName=instance.key_name,
+        MaxCount=count,
+        MinCount=count,
         TagSpecifications=[
             {
                 'ResourceType': 'instance',

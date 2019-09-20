@@ -70,11 +70,11 @@ def prepare(instances):
 
 
 def instanceName(instance):
-    if instance.tags == None:
-        return ''
-    for tag in instance.tags:
-        if tag['Key'] == 'Name':
-            return tag['Value']
+    if instance.tags:
+        for tag in instance.tags:
+            if tag['Key'] == 'Name':
+                return tag['Value']
+    return ''
 
 
 def getStatistics(metric, instanceId, statistics):
