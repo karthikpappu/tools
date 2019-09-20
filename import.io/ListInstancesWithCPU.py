@@ -94,7 +94,7 @@ def getStatistics(metric, instanceId, statistics):
     )
     for cpu in response['Datapoints']:
         if statistics in cpu:
-            return cpu[statistics]
+            return round(cpu[statistics], 1)
     return 0
 
 def getCPU(cloudwatch, instanceId):
@@ -117,8 +117,11 @@ def getCPU(cloudwatch, instanceId):
 #
 # Command Line Arguments
 #
-parser = argparse.ArgumentParser(description='Prepare instance for update')
+parser = argparse.ArgumentParser(description='List all instances with CPU utilization')
 parser.add_argument('--aws-profile', default='connotate')
+parser.add_argument('--running-only', action='store_true')
+parser.add_argument('--no-cpu', action='store_true')
+parser.add_argument('--vpc-id')
 args = parser.parse_args()
 
 
@@ -130,18 +133,31 @@ ec2 = session.resource('ec2')
 cloudwatch = session.resource('cloudwatch')
 
 #instances = ec2.instances.all()
-instances = ec2.instances.filter(
-    Filters=[
+# Add filters based on argument condition
+filters = []
+if args.running_only:
+    filters.append(
         {
             "Name": "instance-state-name",
             "Values": ['running']
         }
-    ]
-)
+    )
+if args.vpc_id:
+    filters.append(
+        {
+            "Name": "vpc-id",
+            "Values": [args.vpc_id]
+        }
+    )
+
+instances = ec2.instances.filter(Filters=filters)
 
 print("Instance State,Instance Type,Instance Name,Instance ID,CPU AVG, CPU MAX")
 for inst in instances:
-    cpuavg, cpumax = getCPU(cloudwatch, inst.instance_id)
+    if args.no_cpu:
+        cpuavg, cpumax = '',''
+    else:
+        cpuavg, cpumax = getCPU(cloudwatch, inst.instance_id)
     print(f"{inst.state['Name']},{inst.instance_type},{instanceName(inst)},{inst.instance_id},{cpuavg},{cpumax}")
 
 
