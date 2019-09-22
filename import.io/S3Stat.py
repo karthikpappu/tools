@@ -2,7 +2,6 @@
 import argparse
 import sys
 import boto3
-import datetime, time
 
 
 # check if bucket has set lifecycle policy
@@ -64,7 +63,7 @@ def print_row(name, nobj, size, creation, modified, has_lifecycle):
 # Command Line Arguments
 #
 parser = argparse.ArgumentParser(description='Walk through all s3 buckets for stats')
-parser.add_argument('--aws-profile', default='connotate')
+parser.add_argument('--aws-profile', default='default')
 args = parser.parse_args()
 
 
