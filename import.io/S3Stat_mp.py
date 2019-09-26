@@ -2,7 +2,9 @@
 import argparse
 import sys
 import boto3
+from multiprocessing import Pool
 
+# multi-processing
 
 # check if bucket has set lifecycle policy
 def has_lifecycle(s3, bucketName):
@@ -73,8 +75,16 @@ args = parser.parse_args()
 session = boto3.session.Session(profile_name=args.aws_profile)
 s3 = session.resource('s3')
 
-print_row('Bucket Name', '#Objects', 'Bucket Size', 'Creation Date', 'Last Modified', 'Has Lifecycle')
-for bucket in s3.buckets.all():
-    hasLc = has_lifecycle(s3, bucket.name)
+def stat_bucket_task(bucketname):
+    hasLc = has_lifecycle(s3, bucketname)
+    bucket = s3.Bucket(bucketname)
     name, nobj, size, t0, t99 = bucket_stat(bucket)
-    print_row(name, nobj, size, t0,t99, hasLc)
+    outname = 'csv/' + bucketname + '.csv'
+    print_row(name, nobj, size, t0,t99, hasLc, outfile=open(outname, 'w'))
+
+with open('allbuckets.log') as log:
+    allbuckets = log.readlines()
+    allbuckets = [ x.strip() for x in allbuckets]
+
+with Pool(2) as p:
+    p.map(stat_bucket_task, allbuckets)
