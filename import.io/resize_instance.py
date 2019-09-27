@@ -116,6 +116,7 @@ parser = argparse.ArgumentParser(description='Resize instance ')
 parser.add_argument('--aws-profile', default='connotate')
 parser.add_argument('--instance-id', required=True)
 parser.add_argument('--new-type', required=True)
+parser.add_argument('--image-id', help='If image id is provided, then it will skip stopping instance and creating image')
 parser.add_argument('--count', type=int, default=1)
 parser.add_argument('--dryrun', action='store_true')
 args = parser.parse_args()
@@ -134,8 +135,11 @@ instance = ec2.Instance(args.instance_id)
 #newinst = create_instance(ec2, instance, 'ami-0142e7bc9c8b9de0a', args.new_type, args.count)
 #sys.exit(0)
 
-stop_instance(instance, args.dryrun)
-imageId = create_image(instance, args.dryrun)
+imageId = args.image_id
+if imageId is None:
+    stop_instance(instance, args.dryrun)
+    imageId = create_image(instance, args.dryrun)
+
 newinst = create_instance(ec2, instance, imageId, args.new_type, args.count, args.dryrun)
 
 
