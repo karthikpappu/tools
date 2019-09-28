@@ -27,9 +27,12 @@ mount_efs()
     if [ $VOL = "efs-lightning-staging" ]; then
         [ ! -d /mnt/efs-lightning-staging ] && mkdir /mnt/efs-lightning-staging
         mount -t efs fs-7366d93a:/ /mnt/efs-lightning-staging
-    if [ $VOL = "efs-lightning-encrypted-staging" ]; then
+    elif [ $VOL = "efs-lightning-encrypted-staging" ]; then
         [ ! -d /mnt/efs-lightning-encrypted-staging ] && mkdir /mnt/efs-lightning-encrypted-staging
         mount -t efs fs-4f9d4f07:/ /mnt/efs-lightning-encrypted-staging
+    elif [ $VOL = "efs-lightning-production" ]; then
+        [ ! -d /mnt/efs-lightning-production ] && mkdir /mnt/efs-lightning-production
+        mount -t efs fs-7d269934:/ /mnt/efs-lightning-production
     fi
 
 }

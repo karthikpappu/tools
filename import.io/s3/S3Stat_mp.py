@@ -31,8 +31,7 @@ def bucket_stat(bucket):
             last = obj.last_modified
     return name, nobj, size, creation, last
 
-def print_row(name, nobj, size, creation, modified, has_lifecycle, outfile=None):
-    'print a csv row'
+def format_size(size):
     # Format size
     kB = 1024
     MB = 1024 * 1024
@@ -50,7 +49,10 @@ def print_row(name, nobj, size, creation, modified, has_lifecycle, outfile=None)
         size_fmt = f'{round(size/kB, 1)}kB'
     else:
         size_fmt = str(size)+'B'
+    return size_fmt
 
+def print_row(name, nobj, size, creation, modified, has_lifecycle, outfile=None):
+    'print a csv row'
     # Format has_lifecycle
     if type(has_lifecycle) is not bool:
         lifecycle_fmt = has_lifecycle # the head
@@ -59,13 +61,14 @@ def print_row(name, nobj, size, creation, modified, has_lifecycle, outfile=None)
     else:
         lifecycle_fmt = 'No'
 
-    print(f'{name},{nobj},{size_fmt},{creation},{modified},{lifecycle_fmt}', file=outfile)
+    print(f'{name},{nobj},{size},{creation},{modified},{lifecycle_fmt}', file=outfile)
 
 #
 # Command Line Arguments
 #
 parser = argparse.ArgumentParser(description='Walk through all s3 buckets for stats')
 parser.add_argument('--aws-profile', default='default')
+parser.add_argument('--buckets-file', default="allbuckets.log")
 args = parser.parse_args()
 
 
@@ -82,7 +85,7 @@ def stat_bucket_task(bucketname):
     outname = 'csv/' + bucketname + '.csv'
     print_row(name, nobj, size, t0,t99, hasLc, outfile=open(outname, 'w'))
 
-with open('allbuckets.log') as log:
+with open(args.buckets_file) as log:
     allbuckets = log.readlines()
     allbuckets = [ x.strip() for x in allbuckets]
 

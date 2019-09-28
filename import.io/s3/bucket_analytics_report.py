@@ -1,13 +1,21 @@
 import csv
 import argparse
+import datetime
 
 
 parser = argparse.ArgumentParser(description='Analyze the bucket analytics report')
 parser.add_argument('--csv-file', required=True)
 args = parser.parse_args()
 
+def get_report(csvfile):
+    report = []
+    with open(csvfile) as f:
+        for item in csv.DictReader(f, skipinitialspace=True):
+            report.append(item)
+    return report
+
 # return (older_than, younger_than)
-# (-1, 99999) means ALL
+# (-99999, 99999) means ALL
 # (730, 9999) means older than 2 years
 def days_range(object_age):
     if object_age == 'ALL':
@@ -26,12 +34,17 @@ def days_range(object_age):
     except Exception as e:
         return None, None
 
-def latest_report():
-    pass
+# expect "2019-09-27"
+def get_date(datestr):
+    datefields = datestr.split('-')
+    try:
+        y,m,d = map(int, datefields)
+    except:
+        y,m,d = 1,1,1
+    return datetime.datetime(y,m,d)
 
-with open(args.csv_file) as f:
-    report = csv.DictReader(f, skipinitialspace=True)
-    for item in report:
-        #print(days_range(item['ObjectAge']))
-        print(item['Date'])
+report = get_report(args.csv_file)
+for item in report:
+    #print(days_range(item['ObjectAge']))
+    print(item['Date'])
 
