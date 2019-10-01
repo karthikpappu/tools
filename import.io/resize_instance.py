@@ -36,7 +36,7 @@ def create_image(inst, dryrun=False):
 
     image = inst.create_image(Name=imgname)
 
-    print("\nchecking image...")
+    print(f"\nchecking image {image.id}...")
     n = 0
     print(image.name, end='', flush=True)
     # give it 2 hours for image to become available
@@ -58,51 +58,38 @@ def create_instance(ec2, instance, imageId, new_type, count, dryrun=False):
     if dryrun:
         print(f"New Instances:", ['i-deadbeef']*count)
         return ['i-deadbeef']*count
+    kwarg = {
+        'ImageId': imageId,
+        'InstanceType': new_type,
+        'KeyName': instance.key_name,
+        'MaxCount': count,
+        'MinCount': count,
+        'TagSpecifications': [
+            {
+                'ResourceType': 'instance',
+                'Tags': instance.tags
+            }
+        ],
+        'NetworkInterfaces': [
+            {
+                'DeviceIndex': 0,
+                'Groups': sg_ids,
+                'SubnetId': instance.subnet_id
+            }
+        ]
+    }
+
     if new_type.startswith(('t', 'T')):
-      instances = ec2.create_instances(
-        ImageId=imageId,
-        InstanceType=new_type,
-        KeyName=instance.key_name,
-        MaxCount=count,
-        MinCount=count,
-        CreditSpecification={
+        kwarg ['CreditSpecification'] = {
             'CpuCredits': 'unlimited'
-        },
-        TagSpecifications=[
-            {
-                'ResourceType': 'instance',
-                'Tags': instance.tags
-            }
-        ],
-        NetworkInterfaces=[
-            {
-                'DeviceIndex': 0,
-                'Groups': sg_ids,
-                'SubnetId': instance.subnet_id
-            }
-        ]
-    )
-    else:
-      instances = ec2.create_instances(
-        ImageId=imageId,
-        InstanceType=new_type,
-        KeyName=instance.key_name,
-        MaxCount=count,
-        MinCount=count,
-        TagSpecifications=[
-            {
-                'ResourceType': 'instance',
-                'Tags': instance.tags
-            }
-        ],
-        NetworkInterfaces=[
-            {
-                'DeviceIndex': 0,
-                'Groups': sg_ids,
-                'SubnetId': instance.subnet_id
-            }
-        ]
-    )
+        }
+
+    if instance.iam_instance_profile is not None:
+        kwarg['IamInstanceProfile'] = {
+            'Arn': instance.iam_instance_profile['Arn'],
+        }
+
+    instances = ec2.create_instances(**kwarg)
 
     newIds = [inst.instance_id for inst in instances]
     print(f"New Instances:", newIds)
@@ -114,7 +101,7 @@ def create_instance(ec2, instance, imageId, new_type, count, dryrun=False):
 #
 parser = argparse.ArgumentParser(description='Resize instance ')
 parser.add_argument('--aws-profile', default='connotate')
-parser.add_argument('--instance-id', required=True)
+parser.add_argument('--instance-id', required=True, help='For test, use i-0897d04fee80c483c for AdminServer')
 parser.add_argument('--new-type', required=True)
 parser.add_argument('--image-id', help='If image id is provided, then it will skip stopping instance and creating image')
 parser.add_argument('--count', type=int, default=1)

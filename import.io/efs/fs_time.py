@@ -19,7 +19,8 @@ args = parser.parse_args()
 #
 
 #within = {1: '1d', 7: '1w', 14: '2w', 30: '1m', 60: '2m', 90: '3m', 182: '6m', 365: '1y', 730: '2y', 3650: '10y', 36500: 'error'}
-within = {7: 'Now', 14: '1 week old', 30: '2 weeks old', 36500: '1 month old'}
+# struggle to come up with good name. look at previous number for why 30 means >=2w
+within = {7: 'Now', 14: 'older than 1 week', 30: 'older than 2 weeks', 36500: 'older than 1 month'}
 
 mcount = {}
 acount = {}
