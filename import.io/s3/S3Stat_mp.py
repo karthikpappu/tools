@@ -89,5 +89,5 @@ with open(args.buckets_file) as log:
     allbuckets = log.readlines()
     allbuckets = [ x.strip() for x in allbuckets]
 
-with Pool(2) as p:
+with Pool(16) as p:
     p.map(stat_bucket_task, allbuckets)

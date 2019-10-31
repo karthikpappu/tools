@@ -1,0 +1,20 @@
+{
+    "fileLocations": [
+        {
+            "URIs": [
+                "https://s3.amazonaws.com/chromium-events-log/*"
+            ]
+        },
+        {
+            "URIPrefixes": [
+            ]
+        }
+    ],
+    "globalUploadSettings": {
+        "format": "CSV",
+        "delimiter": ",",
+        "textqualifier": "'",
+        "containsHeader": "true"
+    }
+}
+

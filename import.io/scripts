@@ -1,0 +1,2 @@
+aws autoscaling describe-auto-scaling-groups
+aws autoscaling describe-launch-configurations

@@ -1,0 +1,8 @@
+ANALYTICS_CSV=buckets.csv
+python3 bucket_analytics_report.py --csv-file print-header > $ANALYTICS_CSV
+ls reports/* | xargs -L1 python3 bucket_analytics_report.py --csv-file >> $ANALYTICS_CSV
+
+python3 merge.py
+
+cp combined.csv ~/Downloads
+

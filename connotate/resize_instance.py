@@ -89,6 +89,7 @@ def create_instance(ec2, instance, imageId, new_type, count, dryrun=False):
             'Arn': instance.iam_instance_profile['Arn'],
         }
 
+    print(kwarg)
     instances = ec2.create_instances(**kwarg)
 
     newIds = [inst.instance_id for inst in instances]
@@ -100,7 +101,7 @@ def create_instance(ec2, instance, imageId, new_type, count, dryrun=False):
 # Command Line Arguments
 #
 parser = argparse.ArgumentParser(description='Resize instance ')
-parser.add_argument('--aws-profile', default='connotate')
+parser.add_argument('--aws-profile', default='default')
 parser.add_argument('--instance-id', required=True, help='For test, use i-0897d04fee80c483c for AdminServer')
 parser.add_argument('--new-type', required=True)
 parser.add_argument('--image-id', help='If image id is provided, then it will skip stopping instance and creating image')
