@@ -1,0 +1,92 @@
+# Get ips from tag, and execute command
+
+# Arguments Parsing
+# Didn't check the compatibility, so check by yourself
+PROG=$(basename $0)
+POSITIONAL=()
+AWSProfile="default"
+while [[ $# -gt 0 ]]
+do
+key="$1"
+
+case $key in
+    -p|--profile)
+    AWSProfile="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    -n|--name)
+    TagName="Name"
+    TagValues="$2"
+    shift # past argument
+    shift # past value
+    ;;
+#    -t|--tag)
+#    TagName="$2"
+#    shift # past argument
+#    shift # past value
+#    ;;
+#    -v|--values)
+#    TagValues="$2"
+#    shift # past argument
+#    shift # past value
+#    ;;
+    *)    # unknown option
+    #POSITIONAL+=("$1") # save it in an array for later
+    #shift # past argument
+    COMMAND="$@"
+    break
+    ;;
+esac
+done
+#echo "COMMAND=$COMMAND"
+
+usage()
+{
+    echo "Usage: $PROG -n|--name <instance_name> <command_on_remote_instance>"
+}
+
+get_ips_by_tag()
+{
+    local TagName=$1
+    local TagValues=$2
+
+    aws --profile ${AWSProfile} ec2 describe-instances --filters "Name=tag:${TagName},Values=${TagValues}" "Name=instance-state-code,Values=16" --query "Reservations[].Instances[].[PrivateIpAddress]" --output text
+}
+
+get_ips_by_name()
+{
+    get_ips_by_tag Name $1
+}
+
+remote_command()
+{
+    echo "$1 $ $COMMAND"
+    if [ $PROG = "mlprod" ] ; then
+        lprod "$@"
+    elif [ $PROG = "mldemo" ]; then
+        ldemo "$@"
+    elif [ $PROG = "mlstaging" ]; then
+        lstaging "$@"
+    else
+        ssh "$@"
+    fi
+}
+
+if [ -z $TagName ] || [ -z $TagValues ] ; then
+    usage
+fi
+
+IPS=$(get_ips_by_tag $TagName $TagValues) 
+
+if [ -z "$COMMAND" ]; then
+    echo $IPS
+    exit 0
+fi
+
+source ~/duyt/etc/import-io.bashrc
+
+for ip in $IPS; do
+    remote_command $ip $COMMAND
+    echo
+done
